@@ -11,6 +11,7 @@ export interface ScrapeTarget {
   name: string;
   url: string;
   type: "static" | "dynamic";
+  bestEffort?: boolean;
   selectors: ScrapeTargetSelectors;
 }
 
@@ -143,6 +144,20 @@ export const SCRAPE_TARGETS: ScrapeTarget[] = [
       location: "span.job-location",
       link: "a.job-link",
       linkPrefix: "https://pangian.com",
+    },
+  },
+  {
+    name: "LinkedIn",
+    url: "https://www.linkedin.com/jobs/search/?keywords=remote+freelance&f_WT=2&f_JT=PT,C,T",
+    type: "static",
+    bestEffort: true,
+    selectors: {
+      container: "div.base-card",
+      title: "h3.base-search-card__title",
+      company: "h4.base-search-card__subtitle",
+      location: "span.job-search-card__location",
+      link: "a.base-card__full-link",
+      linkPrefix: "",
     },
   },
 ];

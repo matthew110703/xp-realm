@@ -16,7 +16,7 @@ export interface BaseJob {
 
 export interface APIJob extends BaseJob {
   source: "api";
-  provider: "remotive" | "jobicy" | "adzuna";
+  provider: "remotive" | "jobicy" | "adzuna" | "himalayas" | "arbeitnow";
   companyLogo: string | null;
   category: string | null;
   relevanceScore: number;

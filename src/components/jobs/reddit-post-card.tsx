@@ -12,7 +12,9 @@ import type { RedditPost } from "@/types/reddit.types";
 interface Props {
   post: RedditPost;
   redditConnected: boolean;
+  telegramConnected?: boolean;
   onGenerateComment: (post: RedditPost) => void;
+  onSendToTelegram?: (post: RedditPost) => void;
 }
 
 interface ExtractedJob {
@@ -20,7 +22,7 @@ interface ExtractedJob {
   skills?: string[];
 }
 
-export function RedditPostCard({ post, redditConnected, onGenerateComment }: Props) {
+export function RedditPostCard({ post, redditConnected, telegramConnected, onGenerateComment, onSendToTelegram }: Props) {
   const extracted = post.extractedJob as ExtractedJob | null;
   const href = `/jobs/${encodeURIComponent(post.id)}?source=reddit`;
 
@@ -90,6 +92,11 @@ export function RedditPostCard({ post, redditConnected, onGenerateComment }: Pro
             >
               Reddit <ExternalLink className="ml-1 h-3 w-3" />
             </a>
+            {telegramConnected && onSendToTelegram && (
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onSendToTelegram(post)}>
+                Send to Telegram
+              </Button>
+            )}
             {redditConnected && (
               <Button size="sm" className="h-7 text-xs" onClick={() => onGenerateComment(post)}>
                 Reply

@@ -19,9 +19,11 @@ model User {
   payRangeMin    Int?
   payRangeMax    Int?
   currency       String?  @default("USD")
-  onboardingDone Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  onboardingDone    Boolean  @default(false)
+  telegramChatId    String?
+  hnSessionCookie   String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   accounts          Account[]
   sessions          Session[]
@@ -130,4 +132,29 @@ model PushSubscription {
   auth      String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HNPost {
+  id           String   @id @default(cuid())
+  hnId         String   @unique
+  source       String
+  author       String?
+  rawText      String
+  url          String?
+  extractedJob Json?
+  fetchedAt    DateTime @default(now())
+  threadMonth  String
+}
+
+model TelegramPost {
+  id           String    @id @default(cuid())
+  messageId    String
+  channel      String
+  rawText      String
+  url          String?
+  extractedJob Json?
+  fetchedAt    DateTime  @default(now())
+  postedAt     DateTime?
+
+  @@unique([channel, messageId])
 }

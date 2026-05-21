@@ -9,6 +9,28 @@ const FETCH_HEADERS = {
   "Accept-Language": "en-US,en;q=0.9",
 };
 
+const BEST_EFFORT_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Referer": "https://www.google.com/",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Dest": "document",
+};
+
+async function fetchBestEffort(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: BEST_EFFORT_HEADERS,
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch {
+    return null;
+  }
+}
+
 let requestCount = 0;
 let windowStart = Date.now();
 
@@ -93,6 +115,23 @@ export async function scrapeAllTargets(): Promise<ScrapeResult[]> {
       limit(async (): Promise<ScrapeResult> => {
         try {
           console.log(`[scraper] Starting: ${target.name}`);
+
+          if (target.bestEffort) {
+            const html = await fetchBestEffort(target.url);
+            if (!html) {
+              console.log(`[scraper] ${target.name} unavailable — skipping`);
+              return { target, jobs: [], rawHtml: "" };
+            }
+            const $ = cheerio.load(html);
+            const jobs = extractFromPage($, target);
+            if (jobs.length === 0) {
+              console.log(`[scraper] ${target.name} returned 0 results (likely blocked) — skipping`);
+              return { target, jobs: [], rawHtml: "" };
+            }
+            console.log(`[scraper] Extracted ${jobs.length} jobs from ${target.name}`);
+            return { target, jobs, rawHtml: "" };
+          }
+
           const html = await fetchWithRetry(target.url);
           console.log(`[scraper] Fetched ${html.length} bytes from ${target.name}`);
 

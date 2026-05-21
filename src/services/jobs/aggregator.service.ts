@@ -1,6 +1,8 @@
 import { fetchRemotiveJobs } from "./remotive.service";
 import { fetchJobicyJobs } from "./jobicy.service";
 import { fetchAdzunaJobs } from "./adzuna.service";
+import { fetchHimalayasJobs } from "./himalayas.service";
+import { fetchArbeitnowJobs } from "./arbeitnow.service";
 import type { APIJob } from "@/types/job.types";
 
 interface AggregateOptions {
@@ -8,6 +10,10 @@ interface AggregateOptions {
   categories?: string[];
   jobTypes?: string[];
   keyword?: string;
+}
+
+function normalizeUrl(url: string): string {
+  return url.replace(/[?#].*$/, "").replace(/\/+$/, "").toLowerCase();
 }
 
 function scoreRelevance(job: APIJob, skills: string[], categories: string[]): number {
@@ -27,21 +33,25 @@ export async function aggregateJobs(options: AggregateOptions = {}): Promise<API
   const { skills = [], categories = [], jobTypes = [], keyword } = options;
   const searchTerms = keyword ? [keyword, ...skills] : skills;
 
-  const [remotive, jobicy, adzuna] = await Promise.allSettled([
+  const [remotive, jobicy, adzuna, himalayas, arbeitnow] = await Promise.allSettled([
     fetchRemotiveJobs(searchTerms, categories),
     fetchJobicyJobs(searchTerms),
     fetchAdzunaJobs(searchTerms),
+    fetchHimalayasJobs(searchTerms, categories),
+    fetchArbeitnowJobs(),
   ]);
 
   const allJobs: APIJob[] = [
     ...(remotive.status === "fulfilled" ? remotive.value : []),
     ...(jobicy.status === "fulfilled" ? jobicy.value : []),
     ...(adzuna.status === "fulfilled" ? adzuna.value : []),
+    ...(himalayas.status === "fulfilled" ? himalayas.value : []),
+    ...(arbeitnow.status === "fulfilled" ? arbeitnow.value : []),
   ];
 
   const seenUrls = new Set<string>();
   const deduped = allJobs.filter((job) => {
-    const key = job.url.replace(/[?#].*$/, "");
+    const key = normalizeUrl(job.url);
     if (seenUrls.has(key)) return false;
     seenUrls.add(key);
     return true;

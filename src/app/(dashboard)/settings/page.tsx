@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { ResumeUploadStep } from "@/components/onboarding/steps/resume-upload-step";
+import { ConnectTelegramBot } from "@/components/telegram/connect-telegram-bot";
+import { ConnectHN } from "@/components/hn/connect-hn";
 import { useProfile } from "@/hooks/use-profile";
 import { usePushSubscription } from "@/hooks/use-push-subscription";
 import type { ParsedResume } from "@/types/profile.types";
@@ -119,7 +121,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="accounts" className="mt-4">
+        <TabsContent value="accounts" className="mt-4 space-y-4">
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="text-base">Connected accounts</CardTitle>
@@ -131,6 +133,82 @@ export default function SettingsPage() {
                   <Badge variant="secondary" className="text-xs">OAuth</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">Manage in Social tab</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="text-base">Connected apps</CardTitle>
+              <CardDescription>Connect third-party apps to send job drafts and post comments.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Telegram Bot */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-sky-500/10 flex items-center justify-center">
+                    <span className="text-sky-400 text-xs font-bold">T</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Telegram Bot</p>
+                    {profile.telegramChatId ? (
+                      <p className="text-xs text-primary">Connected</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Receive job drafts in Telegram</p>
+                    )}
+                  </div>
+                </div>
+                {profile.telegramChatId ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      await fetch("/api/telegram/register", { method: "DELETE" });
+                      toast.success("Telegram disconnected");
+                      refetch();
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                ) : (
+                  <ConnectTelegramBot onConnected={refetch} />
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Hacker News */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-amber-600/10 flex items-center justify-center">
+                    <span className="text-amber-500 text-xs font-bold">HN</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Hacker News</p>
+                    {profile.hnConnected ? (
+                      <p className="text-xs text-primary">Connected</p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Post comments on HN job threads</p>
+                    )}
+                  </div>
+                </div>
+                {profile.hnConnected ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      await fetch("/api/hn/connect", { method: "DELETE" });
+                      toast.success("HN account disconnected");
+                      refetch();
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                ) : (
+                  <ConnectHN onConnected={refetch} />
+                )}
               </div>
             </CardContent>
           </Card>

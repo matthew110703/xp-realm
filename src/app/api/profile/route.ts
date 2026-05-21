@@ -10,12 +10,20 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { profile: true },
+    include: { profile: true, accounts: { select: { provider: true } } },
   });
 
   if (!user) return apiError("User not found", "NOT_FOUND", 404);
 
-  return Response.json({ user });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { passwordHash, hnSessionCookie, ...safeUser } = user;
+
+  return Response.json({
+    user: {
+      ...safeUser,
+      hnConnected: !!hnSessionCookie,
+    },
+  });
 }
 
 export async function PATCH(req: NextRequest) {

@@ -43,5 +43,8 @@ export interface UserData {
   payRangeMax: number | null;
   currency: string;
   onboardingDone: boolean;
+  telegramChatId: string | null;
+  hnConnected: boolean;
+  accounts?: { provider: string }[];
   profile: UserProfileData | null;
 }
