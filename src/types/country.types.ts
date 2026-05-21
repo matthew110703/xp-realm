@@ -1,17 +1,29 @@
+export interface TeleportScores {
+  summary: string;
+  teleportCityScore: number;
+  categories: {
+    name: string;
+    scoreOutOf10: number;
+    color: string;
+  }[];
+}
+
+export interface TeleportDetails {
+  housingCostRange: { min: number; max: number; currency: string };
+  costOfLivingItems: { label: string; value: string }[];
+}
+
 export interface CountryInfo {
-  code: string;
-  name: string;
+  countryCode: string;
+  countryName: string;
   flag: string;
   currency: string;
-  currencySymbol: string;
-  timezone: string[];
+  timezone: string;
   region: string;
-  costOfLivingIndex: number | null;
-  rentIndex: number | null;
+  teleportScores: TeleportScores | null;
+  teleportDetails: TeleportDetails | null;
   workPermitNotes: string;
   taxRegistrationNotes: string;
   availablePaymentMethods: string[];
   freelancerTips: string[];
-  visaInfo: string;
-  cachedAt: string;
 }

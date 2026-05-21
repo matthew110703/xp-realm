@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Globe, CreditCard, FileText, Lightbulb } from "lucide-react";
+import { Loader2, Globe, CreditCard, FileText, Lightbulb, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { CountryInfo } from "@/types/country.types";
 
@@ -34,33 +34,89 @@ export function CountryInfoPanel({ countryCode }: Props) {
 
   return (
     <div className="mt-3 space-y-4 rounded-lg border border-border/50 p-4 text-sm">
+
+      {/* Country header */}
       <div className="flex items-center gap-2">
-        {info.flag && <img src={info.flag} alt={info.name} className="h-5 w-7 object-cover rounded-sm" />}
-        <span className="font-semibold">{info.name}</span>
+        {info.flag && (
+          <img src={info.flag} alt={info.countryName} className="h-5 w-7 object-cover rounded-sm" />
+        )}
+        <span className="font-semibold">{info.countryName}</span>
         <span className="text-muted-foreground text-xs">·</span>
-        <span className="text-xs text-muted-foreground">{info.currency} {info.currencySymbol}</span>
+        <span className="text-xs text-muted-foreground">{info.currency}</span>
         {info.region && (
           <span className="text-xs text-muted-foreground ml-auto">{info.region}</span>
         )}
       </div>
 
-      {(info.costOfLivingIndex || info.rentIndex) && (
-        <div className="flex gap-4 text-xs">
-          {info.costOfLivingIndex && (
-            <div>
-              <p className="text-muted-foreground">Cost of living</p>
-              <p className="font-mono font-semibold">{info.costOfLivingIndex.toFixed(1)}</p>
+      {/* Teleport scores */}
+      {info.teleportScores !== null ? (
+        <div className="space-y-3">
+
+          {/* Overall score badge */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-primary bg-primary/5">
+              <span className="font-mono text-sm font-bold text-primary">
+                {info.teleportScores.teleportCityScore.toFixed(0)}
+              </span>
             </div>
-          )}
-          {info.rentIndex && (
             <div>
-              <p className="text-muted-foreground">Rent index</p>
-              <p className="font-mono font-semibold">{info.rentIndex.toFixed(1)}</p>
+              <p className="text-xs font-medium">Quality of Life Score</p>
+              <p className="text-xs text-muted-foreground">out of 100 · Teleport</p>
+            </div>
+          </div>
+
+          {/* Category bars */}
+          <div className="space-y-1.5">
+            {info.teleportScores.categories.map((cat) => (
+              <div key={cat.name} className="grid grid-cols-[1fr_auto] items-center gap-2">
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground truncate">{cat.name}</p>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${(cat.scoreOutOf10 / 10) * 100}%`,
+                        backgroundColor: cat.color,
+                      }}
+                    />
+                  </div>
+                </div>
+                <span className="font-mono text-xs text-muted-foreground w-6 text-right">
+                  {cat.scoreOutOf10.toFixed(1)}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Housing cost + cost of living items */}
+          {info.teleportDetails !== null && (
+            <div className="space-y-1.5 border-t border-border/50 pt-3">
+              {info.teleportDetails.housingCostRange.max > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Housing / month
+                  </span>
+                  <span className="font-mono">
+                    ${info.teleportDetails.housingCostRange.min.toLocaleString()} – ${info.teleportDetails.housingCostRange.max.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              {info.teleportDetails.costOfLivingItems.map((item) => (
+                <div key={item.label} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground truncate">{item.label}</span>
+                  <span className="font-mono ml-2 shrink-0">{item.value}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
+      ) : (
+        <p className="text-xs text-muted-foreground/70 italic">
+          Detailed city scores unavailable for this location
+        </p>
       )}
 
+      {/* Payment methods */}
       {info.availablePaymentMethods.length > 0 && (
         <div>
           <div className="flex items-center gap-1.5 text-xs font-medium mb-1.5">
@@ -74,6 +130,7 @@ export function CountryInfoPanel({ countryCode }: Props) {
         </div>
       )}
 
+      {/* Work permit */}
       {info.workPermitNotes && (
         <div>
           <div className="flex items-center gap-1.5 text-xs font-medium mb-1">
@@ -83,6 +140,7 @@ export function CountryInfoPanel({ countryCode }: Props) {
         </div>
       )}
 
+      {/* Tax / registration */}
       {info.taxRegistrationNotes && (
         <div>
           <div className="flex items-center gap-1.5 text-xs font-medium mb-1">
@@ -92,6 +150,7 @@ export function CountryInfoPanel({ countryCode }: Props) {
         </div>
       )}
 
+      {/* Freelancer tips */}
       {info.freelancerTips.length > 0 && (
         <div>
           <div className="flex items-center gap-1.5 text-xs font-medium mb-1.5">

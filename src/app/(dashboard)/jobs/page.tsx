@@ -1,18 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { Briefcase } from "lucide-react";
-import { useJobs } from "@/hooks/use-jobs";
+import { useInfiniteJobs } from "@/hooks/use-infinite-jobs";
 import { APIJobCard } from "@/components/jobs/api-job-card";
 import { JobFilters } from "@/components/jobs/job-filters";
-import { JobDetailPanel } from "@/components/jobs/job-detail-panel";
-import { JobCardSkeletonGrid } from "@/components/shared/loading-skeleton";
+import { JobCardSkeletonGrid, JobCardSkeleton } from "@/components/shared/loading-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
-import type { APIJob } from "@/types/job.types";
 
 export default function JobsPage() {
-  const { jobs, loading, filters, setFilters } = useJobs();
-  const [selected, setSelected] = useState<APIJob | null>(null);
+  const { jobs, loading, hasMore, filters, setFilters, sentinelRef } = useInfiniteJobs();
 
   return (
     <div className="space-y-5">
@@ -23,7 +19,7 @@ export default function JobsPage() {
 
       <JobFilters filters={filters} onFiltersChange={setFilters} />
 
-      {loading ? (
+      {jobs.length === 0 && loading ? (
         <JobCardSkeletonGrid />
       ) : jobs.length === 0 ? (
         <EmptyState
@@ -33,14 +29,29 @@ export default function JobsPage() {
           action={{ label: "Update skills", href: "/settings" }}
         />
       ) : (
-        <div className="card-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => (
-            <APIJobCard key={job.id} job={job} onClick={() => setSelected(job)} />
-          ))}
-        </div>
-      )}
+        <>
+          <div className="card-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <APIJobCard key={job.id} job={job} />
+            ))}
+          </div>
 
-      <JobDetailPanel job={selected} onClose={() => setSelected(null)} />
+          <div ref={sentinelRef} className="py-2">
+            {loading && (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <JobCardSkeleton key={i} />
+                ))}
+              </div>
+            )}
+            {!hasMore && !loading && (
+              <p className="text-center text-sm text-muted-foreground py-6">
+                You&apos;ve seen all available listings. Check back tomorrow.
+              </p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

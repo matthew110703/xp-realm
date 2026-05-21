@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
 
   const start = (filters.page - 1) * filters.limit;
   const page = jobs.slice(start, start + filters.limit);
+  const hasMore = start + filters.limit < jobs.length;
 
-  return Response.json({ jobs: page, total: jobs.length });
+  return Response.json({ jobs: page, total: jobs.length, page: filters.page, limit: filters.limit, hasMore });
 }

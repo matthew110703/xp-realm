@@ -28,6 +28,7 @@ export interface ScrapedJob extends BaseJob {
   confidenceScore: number;
   rawUrl: string;
   skills: string[];
+  extractionMethod: "cheerio" | "claude";
 }
 
 export interface RedditJobPost {

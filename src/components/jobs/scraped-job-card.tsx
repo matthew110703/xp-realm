@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ExternalLink, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,12 +16,27 @@ interface Props {
 }
 
 export function ScrapedJobCard({ job }: Props) {
+  const href = `/jobs/${encodeURIComponent(job.id)}?source=scrape`;
+
+  function storeJob() {
+    try {
+      sessionStorage.setItem(`xprealm-job-${job.id}`, JSON.stringify(job));
+    } catch {}
+  }
+
   return (
     <Card className="border-border/50 hover:border-amber-500/20 transition-all duration-200">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold truncate">{job.title}</h3>
+            <Link
+              href={href}
+              prefetch
+              onClick={storeJob}
+              className="text-sm font-semibold truncate block hover:text-primary transition-colors"
+            >
+              {job.title}
+            </Link>
             {job.company && <p className="text-xs text-muted-foreground truncate">{job.company}</p>}
           </div>
           <BookmarkButton job={job} />
@@ -53,12 +69,20 @@ export function ScrapedJobCard({ job }: Props) {
         )}
 
         <div className="flex gap-2 pt-1">
-          <a href={job.url} target="_blank" rel="noopener noreferrer"
-            className={buttonVariants({ size: "sm" }) + " flex-1 h-7 text-xs"}>
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ size: "sm" }) + " flex-1 h-7 text-xs"}
+          >
             Apply Now <ExternalLink className="ml-1 h-3 w-3" />
           </a>
-          <a href={job.rawUrl} target="_blank" rel="noopener noreferrer"
-            className={buttonVariants({ size: "sm", variant: "outline" }) + " h-7 text-xs"}>
+          <a
+            href={job.rawUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ size: "sm", variant: "outline" }) + " h-7 text-xs"}
+          >
             Source
           </a>
         </div>

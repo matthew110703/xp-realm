@@ -54,7 +54,7 @@ export async function aggregateJobs(options: AggregateOptions = {}): Promise<API
 
   if (jobTypes.length > 0) {
     const filtered = scored.filter(
-      (j) => !j.jobType || jobTypes.some((t) => j.jobType?.toLowerCase().includes(t))
+      (j) => !j.jobType || typeof j.jobType !== "string" || jobTypes.some((t) => j.jobType!.toLowerCase().includes(t))
     );
     return filtered.sort((a, b) => b.relevanceScore - a.relevanceScore);
   }

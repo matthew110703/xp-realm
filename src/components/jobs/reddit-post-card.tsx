@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowUp, MessageSquare, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,13 @@ interface ExtractedJob {
 
 export function RedditPostCard({ post, redditConnected, onGenerateComment }: Props) {
   const extracted = post.extractedJob as ExtractedJob | null;
+  const href = `/jobs/${encodeURIComponent(post.id)}?source=reddit`;
+
+  function storePost() {
+    try {
+      sessionStorage.setItem(`xprealm-job-${post.id}`, JSON.stringify(post));
+    } catch {}
+  }
 
   return (
     <Card className="border-border/50 hover:border-orange-500/20 transition-all duration-200">
@@ -36,7 +44,14 @@ export function RedditPostCard({ post, redditConnected, onGenerateComment }: Pro
                 </Badge>
               )}
             </div>
-            <h3 className="text-sm font-semibold leading-snug">{post.title}</h3>
+            <Link
+              href={href}
+              prefetch
+              onClick={storePost}
+              className="text-sm font-semibold leading-snug hover:text-primary transition-colors block"
+            >
+              {post.title}
+            </Link>
             <p className="text-xs text-muted-foreground mt-0.5">
               u/{post.author} · {formatRelativeDate(post.fetchedAt)}
             </p>
@@ -67,8 +82,12 @@ export function RedditPostCard({ post, redditConnected, onGenerateComment }: Pro
           </div>
 
           <div className="flex gap-2">
-            <a href={post.permalink} target="_blank" rel="noopener noreferrer"
-              className={buttonVariants({ size: "sm", variant: "outline" }) + " h-7 text-xs"}>
+            <a
+              href={post.permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ size: "sm", variant: "outline" }) + " h-7 text-xs"}
+            >
               Reddit <ExternalLink className="ml-1 h-3 w-3" />
             </a>
             {redditConnected && (

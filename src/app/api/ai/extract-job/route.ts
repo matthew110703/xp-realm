@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
-import { extractJobFromText } from "@/services/scraper/job-extractor";
+import { extractJobsFromHtmlWithClaude } from "@/services/scraper/job-extractor";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return apiError("rawText, siteName, and siteUrl are required", "VALIDATION_ERROR");
   }
 
-  const job = await extractJobFromText(rawText, siteName, siteUrl);
+  const jobs = await extractJobsFromHtmlWithClaude(rawText, siteName, siteUrl);
 
-  return Response.json({ job });
+  return Response.json({ jobs });
 }

@@ -1,9 +1,7 @@
 import { auth } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
-import { scrapeStaticPage } from "@/services/scraper/cheerio-scraper";
-import { scrapeDynamicPage } from "@/services/scraper/playwright-scraper";
-import { extractJobFromText } from "@/services/scraper/job-extractor";
-import { SCRAPE_TARGETS } from "@/constants/scrape-targets.constants";
+import { scrapeAllTargets } from "@/services/scraper/cheerio-scraper";
+import { extractJobsFromHtmlWithClaude } from "@/services/scraper/job-extractor";
 import { MAX_SCRAPED_RESULTS } from "@/constants/app.constants";
 import type { ScrapedJob } from "@/types/job.types";
 
@@ -19,30 +17,42 @@ export async function GET() {
   if (Date.now() - lastTime < DEBOUNCE_MS) {
     return apiError("Please wait before scraping again", "RATE_LIMITED", 429);
   }
-
   lastScrapeTime.set(userId, Date.now());
 
-  const results: ScrapedJob[] = [];
+  const siteResults = await scrapeAllTargets();
+  const allJobs: ScrapedJob[] = [];
 
-  const scrapeResults = await Promise.allSettled(
-    SCRAPE_TARGETS.map(async (target) => {
-      const rawText = target.type === "dynamic"
-        ? await scrapeDynamicPage(target.url)
-        : await scrapeStaticPage(target.url);
-
-      const job = await extractJobFromText(rawText, target.name, target.url);
-      return job;
-    })
-  );
-
-  for (const result of scrapeResults) {
-    if (result.status === "fulfilled" && result.value) {
-      results.push(result.value);
+  for (const { target, jobs: cheerioJobs, rawHtml } of siteResults) {
+    if (cheerioJobs.length > 0) {
+      const slug = target.name.replace(/\s+/g, "-").toLowerCase();
+      const now = Date.now();
+      const mapped = cheerioJobs.map((j, i): ScrapedJob => ({
+        id: `scrape-${slug}-${now}-${i}`,
+        title: j.title,
+        company: j.company || null,
+        url: j.url,
+        jobType: null,
+        location: j.location || "Remote",
+        salary: null,
+        description: null,
+        tags: [],
+        postedAt: null,
+        source: "scrape",
+        siteName: target.name,
+        confidenceScore: 0.7,
+        rawUrl: target.url,
+        skills: [],
+        extractionMethod: "cheerio",
+      }));
+      allJobs.push(...mapped);
+    } else if (rawHtml) {
+      const claudeJobs = await extractJobsFromHtmlWithClaude(rawHtml, target.name, target.url);
+      allJobs.push(...claudeJobs);
     }
   }
 
   return Response.json({
-    jobs: results.slice(0, MAX_SCRAPED_RESULTS),
-    total: results.length,
+    jobs: allJobs.slice(0, MAX_SCRAPED_RESULTS),
+    total: allJobs.length,
   });
 }
